@@ -12,6 +12,8 @@ star, and drag what you played straight into a clip.
 
 Posy makes no sound itself. It's MIDI only.
 
+![Posy's panel](docs/posy.png)
+
 ## What's on the panel
 
 **SETS** — every chord set, searchable.
@@ -105,7 +107,8 @@ On macOS and Linux the plugin is copied into your VST3 folder after each build
 `-DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"`.
 
 `-DPOSY_BUILD_TOOLS=ON` also builds `PosySnapshot`, which renders the panel to
-a PNG without a host.
+a PNG without a host. The screenshot above is
+`PosySnapshot docs/posy.png 72 0` (set 72, C pad pressed).
 
 ### Releases
 
