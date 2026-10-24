@@ -5,10 +5,11 @@ of twelve, one per key of the octave, and sends it out as MIDI: straight, strumm
 held, or arpeggiated. Put any instrument after it and play pads, keys or plucks
 with one finger.
 
-It ships with **100 chord sets** (pop, jazz, neo soul, gospel, house, synthwave,
-cinematic, classical and more), each a hand-voiced palette of twelve chords that
-belong together. Find one in seconds with the search box, keep favourites with a
-star, and drag what you played straight into a clip.
+It ships with **158 chord sets**, each a palette of twelve chords that belong
+together: pop, rock, jazz, neo soul, gospel, funk, house, techno, synthwave,
+film, ambient, game music, flamenco, Celtic, the modes, baroque and more. Find
+one in seconds with the search box, keep favourites with a star, and drag what
+you played straight into a clip.
 
 Posy makes no sound itself. It's MIDI only.
 
@@ -28,6 +29,73 @@ it to an instrument in Live in about five minutes and shows you round the panel.
 - Genre buttons narrow the list; **STARRED** shows the sets you've starred
   (click the star on a row). Stars are remembered for every Posy on the machine.
 - `<` and `>` in the header step through the list as filtered.
+
+Sets 1–100 are the original palettes. Sets 101–158 were added in 0.2.0, and
+in them every pad's lowest note is its own key (the root, or the bass of a
+slash chord), so the C pad plays something over C and the F# pad something
+over F#. Only Techno Dub breaks the rule: its stabs leave the bass to a
+bassline. The table shows each set's white-key chords (C D E F G A):
+
+| Set | Genre | C D E F G A |
+|---|---|---|
+| 101 | Pop Royal Road | CM9 Dm9 Em7 FM7 G13 Am9 ... |
+| 102 | Pop Anthem | C Dm Em F G Am ... |
+| 103 | Pop Ballad | Cadd9 Dm7 C/E Fadd9 Gsus4 Am7 ... |
+| 104 | Pop Minor | Cadd9 Dm7 E7 FM7 Gadd9 Am9 ... |
+| 105 | Dream Pop | CM9 D9 Em9 FM7#11 G69 Am9 ... |
+| 106 | Rock Mixolydian | C Dsus4 E F G Am ... |
+| 107 | Rock Open Strings | Cadd9 Dsus2 Em7 FM7#11 G6 Asus4 ... |
+| 108 | Rock Blues Shuffle | C7 D9 E7#9 F9 G7 A7 ... |
+| 109 | Rock Metal | C5 Ddim Edim F5 G5 Adim ... |
+| 110 | Jazz Rootless | CM9 Dm9 E7b9 FM9 G13 Am9 ... |
+| 111 | Jazz Rootless Minor | Cm69 Dm7b5 Edim7 Fm9 G7alt Am7b5 ... |
+| 112 | Jazz Quartal | C69 Dm11 Em11 FM7#11 G9sus4 Am11 ... |
+| 113 | Jazz Dominants | C13 D7b9 E7#9 F9 G13b9 A7b13 ... |
+| 114 | Jazz Minor ii-V | Cm69 Dm7b5 Em7b5 Fm9 G7b9 Am7b5 ... |
+| 115 | Jazz Coltrane | CM9 D13 EM9 Fm9 GM9 Am9 ... |
+| 116 | Jazz Bossa Jobim | CM9 Dm9 E7b9 Fm6 G7b13 Am9 ... |
+| 117 | Jazz Blues | C9 D7b9 Edim7 F13 Gm9 Am7 ... |
+| 118 | Gospel | CM9 D9 E7#9 F69 C/G A7#9 ... |
+| 119 | Gospel Minor | Cm9 Dm7b5 Edim7 Fm11 G7#9 Am7b5 ... |
+| 120 | Lofi Hip Hop | CM9 Dm9 E7#9 FM9 G13 Am11 ... |
+| 121 | R&B 90s | CM9 Dm9 Em9 FM9 G13sus4 Am9 ... |
+| 122 | Neo Soul 4-3-6-5 | C13 Dm9 E7#9 FM9 Gm9 Am9 ... |
+| 123 | Soul Motown | C6 Dm7 E7 F6 G9 Am7 ... |
+| 124 | Funk | C9 D9 E7#9 F9 G13 A13 ... |
+| 125 | Afro Highlife | C6 Dm7 Em7 F6 G7 Am7 ... |
+| 126 | Afro Dorian | Cm9 Dm7 Em7b5 F13 Gm9 Am7b5 ... |
+| 127 | House Deep | Cm9 Dm11 Em11 Fm9 Gm9 Am11 ... |
+| 128 | House UK Garage | Cm9 D9sus4 E7#9 Fm11 G7b9 Am7b5 ... |
+| 129 | Trance Epic | Cadd9 Dmadd9 Esus4 Fadd9 Gadd9 Amadd9 ... |
+| 130 | EDM Future Bass | CM9 D9sus4 Em9 FM9 G69 Am9 ... |
+| 131 | Techno Chord Memory | Cm11 Dm11 Em11 Fm11 Gm11 Am11 ... |
+| 132 | Techno Dub | Cm9 Dm9 Em9 Fm9 Gm9 Am9 ... |
+| 133 | Synth Darkwave | Cmadd9 Dm7b5 Edim Fm9 Gm7b5 Adim ... |
+| 134 | Synth Pop 80s | Csus2 Dm Em Fadd9 Gsus4 Am ... |
+| 135 | Film Hope | Cadd9 Dadd9 E FM7#11 Gsus4 Am9 ... |
+| 136 | Film Tension | CmM9 Dm7b5 Emadd9 Fm6 G7b13 Am6 ... |
+| 137 | Cinematic Trailer | Cmadd9 Dm7b5 Eaug Fm Gsus4 Am7b5 ... |
+| 138 | Film Horror | CmM7 Dm7b5 Edim FmM7 G7b9 Aaug ... |
+| 139 | Ambient Lydian | CM9#11 D69 Em11 FM9#11 G69 Am11 ... |
+| 140 | Shoegaze Dream | CM7#11 D69 Eadd9 FM7#11 G6 Aadd9 ... |
+| 141 | Ambient Suspended | Csus2 D9sus4 Esus4 Fsus2 G9sus4 Asus4 ... |
+| 142 | Game Overworld | Cadd9 Dadd9 Em7 Fadd9 Gsus4 Am7 ... |
+| 143 | Game Town | CM7 Dm9 Em7 FM7 G9sus4 Am7 ... |
+| 144 | Flamenco World | C Dm E7b9 FM7 G Am ... |
+| 145 | Celtic World | Cadd9 Dsus2 Em7 F Gadd9 Am7 ... |
+| 146 | Klezmer World | Cm D7b9 Em7b5 F Gm6 A7 ... |
+| 147 | Arabic Hijaz World | C Dm7b5 Em FmM7 G7b9 Am ... |
+| 148 | Samba MPB World | C69 Dm6 E7b13 F69 G7b13 A7b13 ... |
+| 149 | Modal Dorian | Cm9 Dm7 Edim7 F13 Gm9 Am7b5 ... |
+| 150 | Modal Lydian | CM9#11 D13 Em9 FM7 GM9 Am9 ... |
+| 151 | Modal Phrygian Dominant | C7b9 Dm7b5 Edim7 FmM7 Gm7b5 A7b9 ... |
+| 152 | Modal Harmonic Minor | CmM9 Dm7b5 Edim7 Fm9 G7b9 Am7b5 ... |
+| 153 | Modal Melodic Minor | CmM9 Dm11 Edim7 F7#11 G7b13 Am7b5 ... |
+| 154 | Modal Mixolydian | C13 Dm9 Em7b5 FM9 Gm9 Am7 ... |
+| 155 | Baroque Trad | C Dm Em F G7 Am ... |
+| 156 | Romantic Trad | Cm Dm7b5 Edim7 Fm6 G7 Am7b5 ... |
+| 157 | Barbershop Trad | C6 D7 E7 F6 G7 A7 ... |
+| 158 | Country Trad | C D7 C/E F G7 Am ... |
 
 **CHORDS** — the twelve chords of the set, laid out like an octave of a
 keyboard with the sharps above. Click to play, drag across to move between

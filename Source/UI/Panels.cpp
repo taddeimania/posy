@@ -64,11 +64,16 @@ const std::vector<Family>& families()
         { "ALL", {} },
         { "STARRED", {} },
         { "POP", { "Pop" } },
+        { "ROCK", { "Rock" } },
         { "JAZZ", { "Jazz", "Bossa", "Blues" } },
-        { "SOUL R&B", { "Soul", "Gospel", "R&B", "Funk", "Lofi" } },
+        { "SOUL R&B", { "Soul", "Gospel", "R&B", "Funk", "Lofi", "Afro" } },
         { "HOUSE EDM", { "House", "Techno", "Trance", "EDM" } },
         { "SYNTH", { "Synth" } },
-        { "CINEMA", { "Cinematic", "New Age", "Classical", "Modern" } },
+        { "CINEMA", { "Cinematic", "Film", "New Age", "Classical", "Modern" } },
+        { "AMBIENT", { "Ambient", "Shoegaze", "Dream", "New Age" } },
+        { "GAME", { "Game" } },
+        { "WORLD", { "World", "Bossa", "Samba", "Afro" } },
+        { "MODAL", { "Modal" } },
         { "TRAD", { "Trad" } },
         { "UTILITY", { "Utility", "Stack" } },
     };
@@ -305,7 +310,8 @@ void Browser::resized()
     const int w = (r.getWidth() - gap * (per - 1)) / per;
     for (int i = 0; i < (int) chips.size(); ++i)
         chips[(size_t) i]->setBounds (r.getX() + (i % per) * (w + gap), r.getY() + (i / per) * 36, w, 30);
-    r.removeFromTop (78);
+    const int rows = ((int) chips.size() + per - 1) / per;
+    r.removeFromTop (rows * 36 + 6);
     r.removeFromBottom (22);
     list.setBounds (r);
     lastLoaded = -1;   // scroll the loaded set into view now the list has a size

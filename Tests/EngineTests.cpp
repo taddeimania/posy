@@ -68,7 +68,7 @@ struct Ledger
 
 void testTable()
 {
-    CHECK (numChordSets() == 100);
+    CHECK (numChordSets() == 158);
     for (int i = 0; i < numChordSets(); ++i)
     {
         const auto& s = chordSet (i);
@@ -87,6 +87,19 @@ void testTable()
     CHECK (chordSet (0).chords[0].notes[0] == 48);
     CHECK (std::string (chordSet (54).genre) == "Jazz House");
     CHECK (std::string (chordSet (54).chords[11].name) == "CM7#5/G#");
+
+    // The second bank: every chord's lowest note is its pad's key, apart from
+    // Techno Dub, whose stabs leave the bass to a bassline.
+    CHECK (std::string (chordSet (100).genre) == "Pop Royal Road");
+    CHECK (std::string (chordSet (100).chords[0].name) == "CM9");
+    for (int i = 100; i < numChordSets(); ++i)
+    {
+        const auto& s = chordSet (i);
+        if (std::string (s.genre) == "Techno Dub")
+            continue;
+        for (int k = 0; k < kKeys; ++k)
+            CHECK (s.chords[k].notes[0] % 12 == k);
+    }
 
     const auto tags = genreTags (chordSet (64));   // "Gospel/R&B"
     CHECK (tags.size() == 2 && tags[0] == "Gospel" && tags[1] == "R&B");
