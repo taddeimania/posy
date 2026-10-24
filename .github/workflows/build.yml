@@ -94,7 +94,8 @@ jobs:
         run: ctest --test-dir build -C Release --output-on-failure
 
       # Package the plugin ourselves so file permissions and the macOS code
-      # signature survive the download.
+      # signature survive the download. Each archive also carries the getting
+      # started guide, the README and the licence.
       - name: Package
         run: |
           version=$(sed -n 's/^project(Posy VERSION \([0-9.]*\).*/\1/p' CMakeLists.txt)
@@ -104,7 +105,7 @@ jobs:
           stage="$RUNNER_TEMP/$name"
           mkdir -p "$stage"
           cp -R "$art/VST3/Posy.vst3" "$stage/"
-          cp README.md LICENSE "$stage/"
+          cp docs/Posy-Getting-Started.pdf README.md LICENSE "$stage/"
           case "$RUNNER_OS" in
             macOS)
               ditto -c -k --sequesterRsrc --keepParent "$stage" "$GITHUB_WORKSPACE/$name.zip"

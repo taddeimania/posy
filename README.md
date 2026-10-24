@@ -14,6 +14,9 @@ Posy makes no sound itself. It's MIDI only.
 
 ![Posy's panel](docs/posy.png)
 
+New to Posy? The [Getting started guide](docs/Posy-Getting-Started.pdf) (PDF) wires
+it to an instrument in Live in about five minutes and shows you round the panel.
+
 ## What's on the panel
 
 **SETS** — every chord set, searchable.
