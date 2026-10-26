@@ -145,6 +145,55 @@ void testVoicing()
     CHECK (noteName (60) == "C3");
 }
 
+void testNamer()
+{
+    auto name = [] (std::vector<int> v) { return nameChord (v.data(), (int) v.size()); };
+    CHECK (name ({ 48, 55, 62, 64 }) == "Cadd9");
+    CHECK (name ({ 48, 51, 58, 62 }) == "Cm9");
+    CHECK (name ({ 60, 64, 67 }) == "C");
+    CHECK (name ({ 64, 67, 72 }) == "C/E");          // first inversion
+    CHECK (name ({ 57, 60, 65 }) == "F/A");
+    CHECK (name ({ 43, 53, 59, 64 }) == "G13");      // G F B E: 13th, no fifth or ninth
+    CHECK (name ({ 50, 53, 57, 60, 64 }) == "Dm9");
+    CHECK (name ({ 47, 50, 53, 57 }) == "Bm7b5");
+    CHECK (name ({ 48, 55 }) == "C5");
+    CHECK (name ({ 60, 61 }) == "C Db");             // no chord: the notes
+    CHECK (name ({ 60 }) == "C note");
+    CHECK (name ({ 48, 60 }) == "C oct");
+    CHECK (name ({ 48, 50, 57, 59 }) == "CM13(no3)");
+    CHECK (name ({}).empty());
+
+    // Every chord in the second bank names to something with the same notes:
+    // a quick sanity pass that the namer covers the shapes Posy uses.
+    int unnamed = 0;
+    for (int i = 100; i < numChordSets(); ++i)
+        for (auto& c : chordSet (i).chords)
+            if (nameChord (c.notes, c.count).find (' ') != std::string::npos)
+                ++unnamed;
+    CHECK (unnamed == 0);
+}
+
+void testCustomChords()
+{
+    // A custom bank: pad C plays a stored E minor, everything else silent.
+    std::array<ChordDef, kKeys> bank {};
+    bank[0] = { nullptr, 3, { 52, 55, 59 } };
+    Player p;
+    PlayerSettings s;
+    s.chords = bank.data();
+    auto out = run (p, s, { pad (0, true) });
+    CHECK (count (out, true) == 3 && out[0].note == 52);
+    out = run (p, s, { pad (0, false), pad (1, true, 4) });
+    CHECK (count (out, true) == 0);                  // an empty pad plays nothing
+    // Editing the playing chord re-voices it on the next block (with LEGATO,
+    // only the note that changed moves).
+    s.legato = true;
+    run (p, s, { pad (1, false), pad (0, true) });
+    bank[0] = { nullptr, 3, { 52, 55, 60 } };
+    out = run (p, s, {});
+    CHECK (count (out, false) == 1 && count (out, true) == 1);
+}
+
 void testPressRelease()
 {
     Player p;
@@ -310,6 +359,8 @@ int main()
 {
     testTable();
     testVoicing();
+    testNamer();
+    testCustomChords();
     testPressRelease();
     testHold();
     testFallback();

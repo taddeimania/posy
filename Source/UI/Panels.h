@@ -16,6 +16,8 @@ namespace posy::ui
 // ---------------------------------------------------------------------------
 // Chord pads: the twelve chords of the set laid out like an octave of a
 // keyboard, sharps above. Press to play; drag across to move between chords.
+// In EDIT mode a click also selects the pad that the next chord you play
+// lands on; double-click renames it, right-click offers rename and clear.
 // ---------------------------------------------------------------------------
 class ChordPads final : public juce::Component, public juce::SettableTooltipClient
 {
@@ -26,6 +28,7 @@ public:
     void mouseDown (const juce::MouseEvent&) override;
     void mouseDrag (const juce::MouseEvent&) override;
     void mouseUp (const juce::MouseEvent&) override;
+    void mouseDoubleClick (const juce::MouseEvent&) override;
 
     void refresh();                        // repaint if anything shown changed
     juce::Rectangle<float> padBounds (int key) const;
@@ -34,6 +37,8 @@ private:
     int keyAt (juce::Point<float>) const;
     void press (int key, juce::Point<float>);
     void releaseHeld();
+    void padMenu (int key);
+    void rename (int key);
 
     PosyProcessor& proc;
     int mouseKey = -1;
@@ -41,7 +46,8 @@ private:
 };
 
 // ---------------------------------------------------------------------------
-// Browser: search box, genre families, starred sets, and the list itself.
+// Browser: search box, genre families, starred sets, your own banks (MY SETS)
+// and the list itself.
 // ---------------------------------------------------------------------------
 class Browser final : public juce::Component,
                       private juce::ListBoxModel,
@@ -55,11 +61,20 @@ public:
     void paint (juce::Graphics&) override;
     void resized() override;
 
-    void refresh();                        // follow the loaded set
+    void refresh();                        // follow the loaded set, pick up saved banks
     void focusSearch() { search.grabKeyboardFocus(); }
     void step (int delta);                 // load the next/previous set in the list as filtered
 
 private:
+    struct Entry
+    {
+        int factory = -1;                  // factory set index, or -1 for one of your banks
+        juce::File file;                   // the bank's file
+        juce::String title;                // genre, or the bank's name
+        juce::StringArray chordNames;
+        std::array<juce::String, kKeys> normalised;
+    };
+
     // ListBoxModel
     int  getNumRows() override { return (int) shown.size(); }
     void paintListBoxItem (int row, juce::Graphics&, int w, int h, bool selected) override;
@@ -75,8 +90,12 @@ private:
     // KeyListener: arrow keys in the search box move through the list.
     bool keyPressed (const juce::KeyPress&, juce::Component*) override;
 
+    void rebuild();                        // factory sets plus the bank files on disk
     void refilter();
-    bool matches (int setIndex) const;
+    bool matches (const Entry&) const;
+    bool isCurrent (const Entry&) const;
+    void open (const Entry&);
+    void bankMenu (const Entry&);
     void setFamily (int f);
 
     PosyProcessor& proc;
@@ -86,27 +105,36 @@ private:
     std::vector<std::unique_ptr<PanelButton>> chips;
     int family = 0;
     juce::ListBox list;
-    std::vector<int> shown;                // set indices passing the filter
+    std::vector<Entry> entries;            // every factory set, then your banks
+    std::vector<int> shown;                // indices into entries passing the filter
     std::set<int> starredCache;
-    int lastLoaded = -1;
+    juce::String lastCurrent;              // what was loaded when we last scrolled to it
+    uint32_t filesSeen = 0xffffffffu;
+    int numBanks = 0;
     juce::String countText;
 };
 
 // ---------------------------------------------------------------------------
-// Note strip: a long keyboard showing exactly which notes are going out.
+// Note strip: a long keyboard showing exactly which notes are going out. In
+// EDIT mode it also marks the selected pad's notes, and clicking a key adds
+// it to the pad or takes it away.
 // ---------------------------------------------------------------------------
 class NoteStrip final : public juce::Component, public juce::SettableTooltipClient
 {
 public:
     explicit NoteStrip (PosyProcessor& p) : proc (p) {}
     void paint (juce::Graphics&) override;
+    void mouseDown (const juce::MouseEvent&) override;
     void refresh();
 
     static constexpr int lowNote = 24, highNote = 108;   // C0 .. B6 in Live's names
 
 private:
+    int noteAt (juce::Point<float>) const;
+
     PosyProcessor& proc;
     std::array<uint32_t, 4> lastBits {};
+    uint32_t lastEdits = 0xffffffffu;
 };
 
 // ---------------------------------------------------------------------------
@@ -150,4 +178,13 @@ private:
 
 // Chord-name search helpers (exposed for the browser).
 juce::String normaliseChord (const juce::String&);   // flats to sharps, maj/min to M/m
+
+// Dialogs for banks, shared by the browser and the editor's buttons.
+void askForName (juce::Component* near, const juce::String& title, const juce::String& initial,
+                 std::function<void (const juce::String&)> done);
+void saveBankAs (PosyProcessor&, juce::Component* near, std::function<void()> then = {});
+void saveBank (PosyProcessor&, juce::Component* near, std::function<void()> then = {});
+// Runs `then` straight away unless the loaded bank has unsaved changes, in
+// which case it asks first: save, discard, or cancel (then never runs).
+void whenBankIsSafe (PosyProcessor&, juce::Component* near, std::function<void()> then);
 } // namespace posy::ui

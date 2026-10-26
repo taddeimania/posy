@@ -14,7 +14,7 @@
 namespace posy
 {
 inline constexpr int kKeys = 12;
-inline constexpr int kMaxStored = 6;    // notes in a factory voicing
+inline constexpr int kMaxStored = 10;   // notes in a stored voicing (factory sets use up to 6)
 inline constexpr int kMaxVoice  = 16;   // notes after voicing tools (bass, spread)
 
 struct ChordDef
@@ -80,6 +80,11 @@ struct VoiceSettings
 // The stored voicing with the voice controls applied. `extraOctaves` is the
 // octave the key was played in (from a MIDI keyboard), added to `octave`.
 Voicing voice (const ChordDef&, const VoiceSettings&, int extraOctaves = 0);
+
+// A chord symbol for a voicing you played: "Cm9", "F/A", "G13sus4". The
+// lowest note is the bass; if it isn't the chord's root the name gets a slash.
+// Notes it can't name come back as their note names joined by spaces.
+std::string nameChord (const int* notes, int count);
 
 // Note names the way Ableton prints them: MIDI 60 = C3.
 std::string noteName (int midiNote);

@@ -38,6 +38,7 @@ inline constexpr int kArpRateDefault = 5;   // 1/16
 struct PlayerSettings
 {
     int setIndex = 0;              // 0-based chord set
+    const ChordDef* chords = nullptr;  // twelve chords to play instead of the set (a custom bank)
     VoiceSettings voice;
     bool hold   = false;
     bool legato = false;           // keep notes two chords share instead of restriking them

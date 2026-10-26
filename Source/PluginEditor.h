@@ -52,6 +52,9 @@ private:
     posy::ui::NoteStrip strip { proc };
     posy::ui::TakeStrip takeStrip { proc };
     posy::ui::PanelButton recBtn { "REC" }, clearTakeBtn { "CLEAR" };
+
+    // Custom banks
+    posy::ui::PanelButton editBtn { "EDIT" }, saveBtn { "SAVE" }, saveAsBtn { "SAVE AS" }, newBtn { "NEW" };
     posy::ui::ChoiceDisplay takeLenChoice;
 
     // Voice

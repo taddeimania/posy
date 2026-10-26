@@ -90,8 +90,8 @@ void Player::allOff (int64_t time)
 // ---------------------------------------------------------------------------
 Voicing Player::voicingFor (int key, int octave) const
 {
-    const auto& set = chordSet (s.setIndex);
-    return voice (set.chords[clampi (key, 0, kKeys - 1)], s.voice, s.followOctave ? octave : 0);
+    const ChordDef* chords = s.chords != nullptr ? s.chords : chordSet (s.setIndex).chords;
+    return voice (chords[clampi (key, 0, kKeys - 1)], s.voice, s.followOctave ? octave : 0);
 }
 
 void Player::chordTo (const Voicing& v, int64_t time, bool strum)

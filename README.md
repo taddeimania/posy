@@ -27,7 +27,8 @@ it to an instrument in Live in about five minutes and shows you round the panel.
   the same thing (`Bb` finds `A#`), and `maj7` finds `M7`.
 - Up / Down step through the results while you type; Esc clears.
 - Genre buttons narrow the list; **STARRED** shows the sets you've starred
-  (click the star on a row). Stars are remembered for every Posy on the machine.
+  (click the star on a row), **MY SETS** your own banks. Stars are remembered
+  for every Posy on the machine.
 - `<` and `>` in the header step through the list as filtered.
 
 Sets 1–100 are the original palettes. Sets 101–158 were added in 0.2.0, and
@@ -110,7 +111,30 @@ Mod wheel, pitch bend, sustain and other controllers pass straight through.
 Keys stack: the last one pressed plays, and letting it go returns to the one
 you're still holding.
 
-**OUT** — every note going out right now.
+**MY SETS — your own chord banks.** Play your own voicings onto the pads and
+save them as a bank.
+1. Press **EDIT** (above the E and F pads). On a factory set, Posy starts a
+   bank from a copy of it; **NEW** starts an empty one.
+2. Click a pad, play a chord on your MIDI keyboard and let go. You hear it as
+   you play (the notes go straight through to your instrument); when you let
+   go it lands on the pad, gets a name (`CM9`, `A/Db`, or its notes if it isn't
+   a standard chord) and the next pad is selected, so you can play twelve
+   chords in a row. The most notes you held at once is what's kept, so a
+   rolled chord or a corrected wrong note comes out right.
+3. Fix a voicing by clicking keys on the OUT keyboard: the selected pad's
+   notes are marked, and a click adds or removes one. Double-click a pad to
+   rename it; right-click to rename it, name it from its notes again, or
+   clear it.
+4. **SAVE** or **SAVE AS** puts the bank in MY SETS. Right-click a bank in the
+   list to rename it, show its file or delete it.
+
+A bank plays like any set: KEY, the voicing controls, the arp, HOLD and TAKE
+all work on it. The bank you're using is saved in the Live set too, so a
+project keeps playing even if you rename or delete the bank's file. Loading
+something else while a bank has unsaved edits asks first.
+
+**OUT** — every note going out right now. In EDIT mode, click a key to add it
+to the selected pad or take it away.
 
 **TAKE** — the chords you've played, in order (playing the same chord twice in
 a row counts once). **Drag the strip onto a clip slot in Live** to drop them in
@@ -195,7 +219,13 @@ Settings (tooltips, starred sets):
 - Windows: `%APPDATA%\Posy\Posy.settings`
 - Linux: `~/.config/Posy/Posy.settings`
 
-Everything else (the set, the knobs, the take) is saved with the Live set.
+Your banks, one file each (`.posybank`, readable XML):
+- macOS: `~/Library/Application Support/Posy/Banks`
+- Windows: `%APPDATA%\Posy\Banks`
+- Linux: `~/.config/Posy/Banks`
+
+Everything else (the set or bank in use, the knobs, the take) is saved with the
+Live set.
 
 ## Licence
 

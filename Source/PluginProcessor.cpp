@@ -8,6 +8,16 @@ namespace
 constexpr int kMaxTake = 64;
 const juce::Identifier kTakeTag { "Take" };
 const juce::Identifier kChordTag { "Chord" };
+const juce::Identifier kBankTag { "CustomBank" };
+
+ChordDef toDef (const CustomChord& c)
+{
+    ChordDef d { nullptr, 0, {} };
+    for (int n : c.notes)
+        if (d.count < kMaxStored)
+            d.notes[d.count++] = n;
+    return d;
+}
 } // namespace
 
 PosyProcessor::PosyProcessor()
@@ -21,6 +31,7 @@ PosyProcessor::PosyProcessor()
             params[withId->paramID] = apvts.getRawParameterValue (withId->paramID);
 
     for (auto& n : uiNotes) n.store (0);
+    apvts.addParameterListener (ids::chordSet, this);
     events.reserve (1024);
     notesOut.reserve (4096);
     startTimerHz (20);
@@ -29,6 +40,23 @@ PosyProcessor::PosyProcessor()
 PosyProcessor::~PosyProcessor()
 {
     stopTimer();
+    apvts.removeParameterListener (ids::chordSet, this);
+}
+
+// Choosing a factory set (from the panel, the host or automation) leaves any
+// custom bank. Called on whichever thread changed the parameter.
+void PosyProcessor::parameterChanged (const juce::String&, float)
+{
+    customActive.store (false);
+    editMode.store (false);
+}
+
+void PosyProcessor::loadSet (int index)
+{
+    customActive.store (false);
+    editMode.store (false);
+    setParam (ids::chordSet, (float) (juce::jlimit (0, numChordSets() - 1, index) + 1));
+    ++bankVersion;
 }
 
 bool PosyProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
@@ -72,7 +100,25 @@ PlayerSettings PosyProcessor::readSettings() const
 Voicing PosyProcessor::previewVoicing (int key) const
 {
     const auto s = readSettings();
-    return voice (chordSet (s.setIndex).chords[juce::jlimit (0, kKeys - 1, key)], s.voice);
+    key = juce::jlimit (0, kKeys - 1, key);
+    if (customActive.load())
+        return voice (toDef (custom.chords[(size_t) key]), s.voice);
+    return voice (chordSet (s.setIndex).chords[key], s.voice);
+}
+
+juce::String PosyProcessor::chordName (int key) const
+{
+    key = juce::jlimit (0, kKeys - 1, key);
+    if (customActive.load())
+        return custom.chords[(size_t) key].name;
+    return chordSet (setIndex()).chords[key].name;
+}
+
+juce::String PosyProcessor::setTitle() const
+{
+    if (customActive.load())
+        return custom.name + (customDirty ? " *" : "");
+    return chordSet (setIndex()).genre;
 }
 
 // ---------------------------------------------------------------------------
@@ -96,12 +142,49 @@ void PosyProcessor::processBlock (juce::AudioBuffer<float>& audio, juce::MidiBuf
     // Notes are taken over: each key of the keyboard picks a chord of the set,
     // and its octave moves the chord (KEYBOARD OCTAVE). Everything else -- mod
     // wheel, pitch bend, sustain -- passes straight through to the instrument.
+    //
+    // In EDIT mode notes pass straight through too, so you hear the voicing
+    // you're playing, and the chord is caught when you let go of it.
+    const int channel = juce::jlimit (1, 16, juce::roundToInt (getParam (ids::channel)));
+    const bool capturing = editMode.load();
     passthrough.clear();
     for (const auto meta : midi)
     {
         const auto msg = meta.getMessage();
         const int pos = juce::jlimit (0, juce::jmax (0, numSamples - 1), meta.samplePosition);
-        if (msg.isNoteOnOrOff())
+        // A key that went down before EDIT was switched on still releases its
+        // chord; one that went down during EDIT still passes its note-off on.
+        const bool thru = msg.isNoteOnOrOff()
+                       && (heldIn.test ((size_t) msg.getNoteNumber()) || (capturing && msg.isNoteOn()));
+        if (thru)
+        {
+            const int n = msg.getNoteNumber();
+            auto thru = msg;
+            thru.setChannel (channel);
+            passthrough.addEvent (thru, pos);
+            sounding[(size_t) n] = msg.isNoteOn();
+            if (msg.isNoteOn())
+            {
+                heldIn.set ((size_t) n);
+                if (heldIn.count() >= peakIn.count())
+                    peakIn = heldIn;
+            }
+            else
+            {
+                heldIn.reset ((size_t) n);
+                if (heldIn.none() && peakIn.any())
+                {
+                    if (capturing)
+                    {
+                        const auto scope = captureFifo.write (1);
+                        if (scope.blockSize1 > 0)
+                            captures[(size_t) scope.startIndex1] = peakIn;
+                    }
+                    peakIn.reset();
+                }
+            }
+        }
+        else if (msg.isNoteOnOrOff())
         {
             const int n = msg.getNoteNumber();
             KeyEvent e;
@@ -140,9 +223,11 @@ void PosyProcessor::processBlock (juce::AudioBuffer<float>& audio, juce::MidiBuf
 
     // --- play --------------------------------------------------------------------
     notesOut.clear();
-    player.process (info, readSettings(), events.data(), (int) events.size(), notesOut);
+    auto settings = readSettings();
+    if (customActive.load())
+        settings.chords = beginReadBank();
+    player.process (info, settings, events.data(), (int) events.size(), notesOut);
 
-    const int channel = juce::jlimit (1, 16, juce::roundToInt (getParam (ids::channel)));
     midi.clear();
     midi.addEvents (passthrough, 0, numSamples, 0);
     for (const auto& n : notesOut)
@@ -231,7 +316,7 @@ void PosyProcessor::timerCallback()
         TakeChord c;
         c.setNumber = st.setIndex + 1;
         c.key = st.key;
-        c.name = chordSet (st.setIndex).chords[st.key].name;
+        c.name = chordName (st.key);
         for (int i = 0; i < st.voicing.count; ++i)
             c.notes.add (st.voicing.notes[(size_t) i]);
 
@@ -246,6 +331,200 @@ void PosyProcessor::timerCallback()
     };
     for (int i = 0; i < scope.blockSize1; ++i) take (startedEvents[(size_t) (scope.startIndex1 + i)]);
     for (int i = 0; i < scope.blockSize2; ++i) take (startedEvents[(size_t) (scope.startIndex2 + i)]);
+
+    // Chords played in while editing: onto the selected pad, then the next.
+    const auto caught = captureFifo.read (captureFifo.getNumReady());
+    auto land = [this] (const std::bitset<128>& b)
+    {
+        if (! editMode.load())
+            return;
+        juce::Array<int> notes;
+        for (int n = 0; n < 128; ++n)
+            if (b.test ((size_t) n))
+                notes.add (n);
+        const int pad = selectedPad;
+        setPadNotes (pad, notes);
+        captureText = juce::String (keyName (pad)) + juce::String::fromUTF8 (" \xe2\x86\x90 ")
+                    + custom.chords[(size_t) pad].name;
+        selectedPad = (pad + 1) % kKeys;
+        ++bankVersion;
+    };
+    for (int i = 0; i < caught.blockSize1; ++i) land (captures[(size_t) (caught.startIndex1 + i)]);
+    for (int i = 0; i < caught.blockSize2; ++i) land (captures[(size_t) (caught.startIndex2 + i)]);
+}
+
+// ---------------------------------------------------------------------------
+// Custom banks
+// ---------------------------------------------------------------------------
+void PosyProcessor::publishBank()
+{
+    const int pub = bankPublished.load (std::memory_order_acquire);
+    const int read = bankReading.load (std::memory_order_acquire);
+    int slot = 0;
+    while (slot == pub || slot == read)
+        ++slot;
+    auto& table = bankTables[(size_t) slot];
+    for (int k = 0; k < kKeys; ++k)
+        table[(size_t) k] = toDef (custom.chords[(size_t) k]);
+    bankPublished.store (slot, std::memory_order_release);
+}
+
+void PosyProcessor::bankEdited()
+{
+    customDirty = true;
+    publishBank();
+    ++bankVersion;
+}
+
+void PosyProcessor::startEditing()
+{
+    if (customActive.load())
+        return;
+    const auto& set = chordSet (setIndex());
+    custom = {};
+    custom.name = "From " + juce::String (set.number).paddedLeft ('0', 3) + " " + set.genre;
+    for (int k = 0; k < kKeys; ++k)
+    {
+        auto& c = custom.chords[(size_t) k];
+        c.name = set.chords[k].name;
+        c.named = true;                      // keep the original names unless the notes change
+        for (int i = 0; i < set.chords[k].count; ++i)
+            c.notes.addIfNotAlreadyThere (set.chords[k].notes[i]);
+        c.notes.sort();
+    }
+    publishBank();
+    customActive.store (true);
+    customDirty = true;
+    ++bankVersion;
+}
+
+void PosyProcessor::newBank()
+{
+    custom = {};
+    custom.name = "New Bank";
+    publishBank();
+    customActive.store (true);
+    customDirty = false;
+    selectedPad = 0;
+    editMode.store (true);
+    ++bankVersion;
+}
+
+bool PosyProcessor::loadBank (const juce::File& f)
+{
+    CustomBank b;
+    if (! banks::load (f, b))
+        return false;
+    custom = b;
+    publishBank();
+    customActive.store (true);
+    customDirty = false;
+    ++bankVersion;
+    return true;
+}
+
+bool PosyProcessor::saveBank()
+{
+    if (! customActive.load() || custom.file == juce::File())
+        return false;
+    if (! banks::save (custom, custom.file))
+        return false;
+    customDirty = false;
+    ++bankVersion;
+    ++bankFilesVersion;
+    return true;
+}
+
+bool PosyProcessor::saveBankAs (const juce::String& rawName)
+{
+    const auto name = banks::sanitise (rawName);
+    if (name.isEmpty() || ! customActive.load())
+        return false;
+    const auto f = banks::fileFor (name);
+    auto copy = custom;
+    copy.name = name;
+    if (! banks::save (copy, f))
+        return false;
+    custom.name = name;
+    custom.file = f;
+    customDirty = false;
+    ++bankVersion;
+    ++bankFilesVersion;
+    return true;
+}
+
+void PosyProcessor::bankFileRenamed (const juce::File& from, const juce::File& to, const juce::String& name)
+{
+    if (customActive.load() && custom.file == from)
+    {
+        custom.file = to;
+        custom.name = name;
+        ++bankVersion;
+    }
+    ++bankFilesVersion;
+}
+
+void PosyProcessor::setPadNotes (int key, juce::Array<int> notes)
+{
+    startEditing();
+    key = juce::jlimit (0, kKeys - 1, key);
+    notes.sort();
+    juce::Array<int> unique;
+    for (int n : notes)
+        if (juce::isPositiveAndBelow (n, 128) && unique.size() < kMaxStored)
+            unique.addIfNotAlreadyThere (n);
+    auto& c = custom.chords[(size_t) key];
+    c.notes = unique;
+    c.name = juce::String (nameChord (unique.getRawDataPointer(), unique.size()));
+    c.named = false;
+    bankEdited();
+}
+
+void PosyProcessor::setPadName (int key, const juce::String& name)
+{
+    startEditing();
+    auto& c = custom.chords[(size_t) juce::jlimit (0, kKeys - 1, key)];
+    c.named = name.trim().isNotEmpty();
+    c.name = c.named ? name.trim().substring (0, 24)
+                     : juce::String (nameChord (c.notes.getRawDataPointer(), c.notes.size()));
+    bankEdited();
+}
+
+void PosyProcessor::clearPad (int key)
+{
+    startEditing();
+    auto& c = custom.chords[(size_t) juce::jlimit (0, kKeys - 1, key)];
+    c.notes.clear();
+    c.name.clear();
+    c.named = false;
+    bankEdited();
+}
+
+void PosyProcessor::togglePadNote (int key, int note)
+{
+    startEditing();
+    key = juce::jlimit (0, kKeys - 1, key);
+    auto& c = custom.chords[(size_t) key];
+    if (c.notes.contains (note))
+        c.notes.removeFirstMatchingValue (note);
+    else if (c.notes.size() < kMaxStored)
+        c.notes.addUsingDefaultSort (note);
+    if (! c.named)
+        c.name = juce::String (nameChord (c.notes.getRawDataPointer(), c.notes.size()));
+    bankEdited();
+}
+
+void PosyProcessor::setEditing (bool on)
+{
+    if (on)
+    {
+        startEditing();
+        if (playingKey() >= 0)
+            selectedPad = playingKey();
+        captureText.clear();
+    }
+    editMode.store (on);
+    ++bankVersion;
 }
 
 juce::File PosyProcessor::writeTakeMidi() const
@@ -307,7 +586,19 @@ void PosyProcessor::getStateInformation (juce::MemoryBlock& destData)
         take.appendChild (t, nullptr);
     }
     state.appendChild (take, nullptr);
-    state.setProperty ("stateVersion", 1, nullptr);
+
+    for (int i = state.getNumChildren(); --i >= 0;)
+        if (state.getChild (i).hasType (kBankTag))
+            state.removeChild (i, nullptr);
+    if (customActive.load())
+    {
+        juce::ValueTree bank (kBankTag);
+        bank.setProperty ("file", custom.file.getFullPathName(), nullptr);
+        bank.setProperty ("dirty", customDirty, nullptr);
+        bank.appendChild (custom.toTree(), nullptr);
+        state.appendChild (bank, nullptr);
+    }
+    state.setProperty ("stateVersion", 2, nullptr);
 
     if (auto xml = state.createXml())
         copyXmlToBinary (*xml, destData);
@@ -341,7 +632,25 @@ void PosyProcessor::setStateInformation (const void* data, int sizeInBytes)
         state.removeChild (take, nullptr);
     }
     ++takeVersion;
-    apvts.replaceState (state);
+
+    // A custom bank in use when the set was saved comes back with it, whether
+    // or not its file still exists.
+    auto bank = state.getChildWithName (kBankTag);
+    if (bank.isValid())
+        state.removeChild (bank, nullptr);
+    apvts.replaceState (state);   // (this clears customActive via the chordSet listener)
+
+    editMode.store (false);
+    if (bank.isValid())
+    {
+        custom = CustomBank::fromTree (bank.getChildWithName (banks::tag));
+        const auto path = bank["file"].toString();
+        custom.file = juce::File::isAbsolutePath (path) ? juce::File (path) : juce::File();
+        customDirty = (bool) bank["dirty"];
+        publishBank();
+        customActive.store (true);
+    }
+    ++bankVersion;
 }
 
 juce::AudioProcessorEditor* PosyProcessor::createEditor()

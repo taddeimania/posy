@@ -1,34 +1,28 @@
 Posy is a chord generator for Ableton Live: twelve chords per set, one per key,
 sent out as MIDI. Straight, strummed, held or arpeggiated.
 
-## What's new in 0.2.0
+## What's new in 0.3.0
 
-**58 new chord sets (101–158), for 158 in all.**
-- Pop and rock: Royal Road, Anthem, Ballad, Pop Minor, Dream Pop, Rock
-  Mixolydian, Open Strings, Blues Shuffle, Metal.
-- Jazz: rootless piano voicings (major and minor), quartal "So What" stacks,
-  twelve dominant colours, minor ii–V, Coltrane changes, Jobim bossa, jazz blues.
-- Soul and R&B: Gospel, Gospel Minor, Lofi Hip Hop, 90s R&B, Neo Soul 4-3-6-5,
-  Motown, Funk, Afro Highlife, Afro Dorian.
-- House and techno: Deep House, UK Garage, Trance Epic, Future Bass, Detroit
-  chord memory, dub stabs.
-- Synth, film and ambient: Darkwave, 80s synth-pop, Film Hope, Film Tension,
-  Trailer, Horror, Ambient Lydian, Shoegaze, Suspended.
-- Game, world, modal and traditional: Overworld, Town, Flamenco, Celtic,
-  Klezmer, Arabic Hijaz, Samba/MPB, the six modes, Baroque, Romantic,
-  Barbershop, Country.
+**Your own chord banks.** Play your own voicings onto the pads and save them.
+- Press **EDIT** (above the E and F pads), click a pad, play a chord on your
+  MIDI keyboard and let go. The chord lands on the pad with a name (`CM9`,
+  `A/Db`) and the next pad is selected, so you can play twelve in a row. You
+  hear the notes through your instrument as you play them.
+- Posy keeps the most notes you held at once, so a rolled chord or a
+  corrected wrong note comes out right.
+- Fix a voicing by clicking keys on the OUT keyboard. Double-click a pad to
+  rename it; right-click to rename, re-name from its notes, or clear it.
+- **EDIT** on a factory set starts a bank from a copy of it; **NEW** starts
+  an empty one.
+- **SAVE** / **SAVE AS** put banks under the new **MY SETS** button. Right-click
+  a bank in the list to rename, show or delete it.
+- The bank you're using is saved in the Live set too, so a project keeps
+  playing even if the bank's file is renamed or deleted. Loading something
+  else with unsaved edits asks first.
 
-In the new sets every pad's lowest note is its own key, so the C pad plays
-something over C. Only Techno Dub leaves the bass out, for a bassline to fill.
-
-**New genre buttons:** ROCK, AMBIENT, GAME, WORLD and MODAL.
-
-**Getting started guide:** a PDF that wires Posy to an instrument in Live and
-shows you round the panel. It's in every download.
-
-**If you automated the chord set in 0.1.0:** the Chord Set parameter now spans
-158 sets instead of 100, so automation drawn in 0.1.0 lands on different sets.
-Redraw it after upgrading.
+Banks are files in `~/Library/Application Support/Posy/Banks` (Windows
+`%APPDATA%\Posy\Banks`, Linux `~/.config/Posy/Banks`). The getting started
+guide has a new page on making one.
 
 ## Install
 

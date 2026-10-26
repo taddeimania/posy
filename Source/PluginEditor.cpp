@@ -66,6 +66,25 @@ PosyPanel::PosyPanel (PosyProcessor& p) : proc (p)
     addAndMakeVisible (pads);
     pads.setBounds (452, 100, 924, 334);
 
+    // --- custom banks: in the gap above E and F, where the keyboard has no sharp
+    addButton (editBtn, { 788, 104, 120, 40 },
+               "EDIT: play your own chords onto the pads. Click a pad, play a chord on your MIDI keyboard "
+               "(you hear it as you play) and let go: it lands on the pad, named, and the next pad is "
+               "selected. You can also click notes on the OUT keyboard to add or remove them. Editing a "
+               "factory set starts a bank from a copy of it.",
+               [this] (const juce::ModifierKeys&) { proc.setEditing (! proc.editing()); });
+    editBtn.setFontHeight (15.0f);
+    addButton (saveBtn, { 788, 150, 120, 32 }, "Save your bank (asks for a name the first time).",
+               [this] (const juce::ModifierKeys&) { posy::ui::saveBank (proc, this); });
+    addButton (saveAsBtn, { 788, 188, 120, 32 },
+               "Save this bank, or the factory set you're on, as a new bank under MY SETS.",
+               [this] (const juce::ModifierKeys&) { posy::ui::saveBankAs (proc, this); });
+    addButton (newBtn, { 788, 226, 120, 32 }, "Start an empty bank and switch EDIT on.",
+               [this] (const juce::ModifierKeys&)
+               {
+                   posy::ui::whenBankIsSafe (proc, this, [this] { proc.newBank(); });
+               });
+
     addAndMakeVisible (strip);
     strip.setBounds (456, 474, 916, 36);
     strip.setTooltip ("Every note Posy is sending right now. C labels follow Live: middle C is C3.");
@@ -233,6 +252,10 @@ void PosyPanel::timerCallback()
     for (auto& [b, id] : toggles)
         b->setLit (proc.getParam (id) > 0.5f);
     recBtn.setLit (proc.takeRecording());
+    editBtn.setLit (proc.editing());
+    const bool canSave = proc.isCustom() && proc.bankDirty();
+    saveBtn.setAlpha (canSave ? 1.0f : 0.4f);
+    saveBtn.setEnabled (canSave);
 
     const bool arpOn = proc.getParam (ids::arp) > 0.5f;
     const String status = ! arpOn ? String() : proc.hostPlaying() ? "SYNCED" : "FREE";

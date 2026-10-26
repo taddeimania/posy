@@ -1,7 +1,8 @@
 // Snapshot.cpp — dev tool: render Posy's panel to a PNG without a host.
-//   PosySnapshot out.png [set-number] [key-to-press]
+//   PosySnapshot out.png [set-number] [key-to-press] [edit]
 // Plays a few chords first so the take, the pads and the note strip have
-// something to show.
+// something to show. With "edit", switches EDIT on and plays a chord in from
+// MIDI so the bank editing looks are on screen.
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
@@ -32,8 +33,28 @@ int main (int argc, char** argv)
         proc.releasePad (key); block();
     }
     const int key = argc > 3 ? juce::String (argv[3]).getIntValue() : 2;
-    proc.pressPad (key, 100);
-    block();
+    if (argc > 4 && juce::String (argv[4]) == "edit")
+    {
+        proc.setEditing (true);
+        proc.selectPad (3);
+        auto play = [&] (std::initializer_list<int> notes, bool on)
+        {
+            midi.clear();
+            for (int n : notes)
+                midi.addEvent (on ? juce::MidiMessage::noteOn (1, n, (juce::uint8) 96)
+                                  : juce::MidiMessage::noteOff (1, n), 0);
+            proc.processBlock (audio, midi);
+        };
+        play ({ 51, 58, 62, 65 }, true);     // EbM9 (no 3rd) style voicing onto D#
+        play ({ 51, 58, 62, 65 }, false);
+        juce::MessageManager::getInstance()->runDispatchLoopUntil (120);
+        play ({ 52, 59, 62, 67 }, true);     // held: the strip shows it going out
+    }
+    else
+    {
+        proc.pressPad (key, 100);
+        block();
+    }
     juce::MessageManager::getInstance()->runDispatchLoopUntil (120);
 
     std::unique_ptr<juce::AudioProcessorEditor> ed (proc.createEditor());

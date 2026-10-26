@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.22)
 # binary pass -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64". Set before project().
 set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "Minimum macOS version")
 
-project(Posy VERSION 0.2.0 LANGUAGES C CXX)
+project(Posy VERSION 0.3.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -58,11 +58,13 @@ juce_add_plugin(Posy
 
 set(POSY_ENGINE_SOURCES
     Source/Engine/Chords.cpp
+    Source/Engine/ChordNamer.cpp
     Source/Engine/Player.cpp)
 
 target_sources(Posy PRIVATE
     ${POSY_ENGINE_SOURCES}
     Source/Settings.cpp
+    Source/Banks.cpp
     Source/PluginProcessor.cpp
     Source/PluginEditor.cpp
     Source/UI/Widgets.cpp
@@ -95,6 +97,7 @@ if(POSY_BUILD_TOOLS)
         Tools/Snapshot.cpp
         ${POSY_ENGINE_SOURCES}
         Source/Settings.cpp
+        Source/Banks.cpp
         Source/PluginProcessor.cpp
         Source/PluginEditor.cpp
         Source/UI/Widgets.cpp
