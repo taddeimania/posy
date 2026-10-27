@@ -138,6 +138,18 @@ PosyPanel::PosyPanel (PosyProcessor& p) : proc (p)
     addToggle (fixedVelBtn, ids::fixedVel, { 716, 800, 80, 34 },
                "On: every chord plays at VELOCITY. Off: keyboard velocity, and pads play louder higher up.");
 
+    dragChoice.getText = [this]
+    {
+        static const char* shortNames[] { "PRESS", "MOD", "EXPR", "OFF" };
+        return juce::String (shortNames[juce::jlimit (0, 3, juce::roundToInt (proc.getParam (ids::dragSends)))]);
+    };
+    dragChoice.fontH = 13.0f;
+    addChoice (dragChoice, ids::dragSends, "DRAG", { 808, 794, 84, 56 },
+               "While you hold a pad, dragging up and down changes the velocity of the notes it starts "
+               "(each arp step). It also sends this to the instrument so a sounding chord can swell: "
+               "PRESS (aftertouch: map Pressure to volume or filter in Wavetable, Drift or Meld), "
+               "MOD (mod wheel, CC1), EXPR (expression, CC11) or OFF. Letting go puts it back.");
+
     // --- arp -----------------------------------------------------------------------
     addToggle (arpBtn, ids::arp, { 926, 632, 298, 40 },
                "Arpeggiate the chord instead of playing it at once. Locks to Live's tempo and grid while "
@@ -154,8 +166,17 @@ PosyPanel::PosyPanel (PosyProcessor& p) : proc (p)
                "Latch: the chord keeps playing after you let go, until you play another or turn HOLD off.");
     holdBtn.setFontHeight (22.0f);
 
+    // A click anywhere outside the search box gives the keyboard back to Live.
+    addMouseListener (this, true);
+
     startTimerHz (30);
     timerCallback();
+}
+
+void PosyPanel::mouseDown (const juce::MouseEvent& e)
+{
+    if (! browser.isSearchBox (e.eventComponent))
+        browser.releaseSearchFocus();
 }
 
 PosyPanel::~PosyPanel()

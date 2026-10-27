@@ -230,6 +230,32 @@ void PosyProcessor::processBlock (juce::AudioBuffer<float>& audio, juce::MidiBuf
 
     midi.clear();
     midi.addEvents (passthrough, 0, numSamples, 0);
+
+    // Dragging on a held pad: notes it starts take the new velocity (inside the
+    // player), and the drag goes out as pressure or a CC so a sounding chord
+    // can swell and fade too. Letting go of the pad puts the controller back.
+    const int dragMode = juce::jlimit (0, 3, juce::roundToInt (getParam (ids::dragSends)));
+    for (const auto& e : events)
+    {
+        if (e.source < kPadSource)
+            continue;
+        if (e.velocityOnly && dragMode != 3)
+        {
+            const int v = e.velocity;
+            midi.addEvent (dragMode == 0 ? juce::MidiMessage::channelPressureChange (channel, v)
+                                         : juce::MidiMessage::controllerEvent (channel, dragMode == 1 ? 1 : 11, v),
+                           e.offset);
+            dragSentMode = dragMode;
+        }
+        else if (! e.on && dragSentMode >= 0)
+        {
+            midi.addEvent (dragSentMode == 0 ? juce::MidiMessage::channelPressureChange (channel, 0)
+                         : dragSentMode == 1 ? juce::MidiMessage::controllerEvent (channel, 1, 0)
+                                             : juce::MidiMessage::controllerEvent (channel, 11, 127),
+                           e.offset);
+            dragSentMode = -1;
+        }
+    }
     for (const auto& n : notesOut)
     {
         if (n.on)
@@ -276,6 +302,19 @@ void PosyProcessor::pressPad (int key, int velocity)
     {
         KeyEvent e;
         e.on = true; e.source = kPadSource + key; e.key = key; e.octave = 0;
+        e.velocity = juce::jlimit (1, 127, velocity);
+        padEvents[(size_t) scope.startIndex1] = e;
+    }
+}
+
+void PosyProcessor::padVelocity (int key, int velocity)
+{
+    const juce::SpinLock::ScopedLockType lock (padWriteLock);
+    const auto scope = padFifo.write (1);
+    if (scope.blockSize1 > 0)
+    {
+        KeyEvent e;
+        e.on = true; e.velocityOnly = true; e.source = kPadSource + key; e.key = key;
         e.velocity = juce::jlimit (1, 127, velocity);
         padEvents[(size_t) scope.startIndex1] = e;
     }

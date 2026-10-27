@@ -27,6 +27,15 @@ inline constexpr const char* arpRate   = "arpRate";
 inline constexpr const char* arpOct    = "arpOct";
 inline constexpr const char* arpGate   = "arpGate";
 inline constexpr const char* channel   = "channel";
+inline constexpr const char* dragSends = "dragSends";
+
+// What dragging up and down on a held pad sends to the instrument, besides
+// changing the velocity of the notes it starts.
+inline const juce::StringArray& dragSendsNames()
+{
+    static const juce::StringArray n { "Pressure", "Mod Wheel (CC1)", "Expression (CC11)", "Off" };
+    return n;
+}
 
 inline juce::String keyText (int v)
 {
@@ -103,6 +112,8 @@ inline juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout
         5, 100, 60, text ([] (int v) { return String (v) + "%"; })));
 
     layout.add (std::make_unique<AudioParameterInt> (ParameterID { ids::channel, 1 }, "MIDI Channel", 1, 16, 1));
+    layout.add (std::make_unique<AudioParameterChoice> (ParameterID { ids::dragSends, 1 }, "Pad Drag Sends",
+        ids::dragSendsNames(), 0));
     return layout;
 }
 } // namespace posy

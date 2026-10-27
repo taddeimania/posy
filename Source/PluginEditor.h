@@ -19,6 +19,7 @@ public:
 
     void paint (juce::Graphics&) override;
     void resized() override {}
+    void mouseDown (const juce::MouseEvent&) override;   // clicks anywhere, via a nested listener
 
     std::function<void (bool)> onTooltips;   // the editor shows or hides its tooltip window
     void syncTooltips();
@@ -61,6 +62,7 @@ private:
     posy::ui::Knob keyKnob, octaveKnob, invertKnob, spreadKnob, strumKnob, velocityKnob;
     posy::ui::PanelButton bassBtn { "BASS" }, legatoBtn { "LEGATO" }, followBtn { "KBD OCT" },
                           strumDownBtn { "DOWN" }, fixedVelBtn { "FIXED" };
+    posy::ui::ChoiceDisplay dragChoice;
 
     // Arp & hold
     posy::ui::PanelButton arpBtn { "ARP" }, holdBtn { "HOLD" };

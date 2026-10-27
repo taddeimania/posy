@@ -399,6 +399,18 @@ void Player::process (const BlockInfo& block, const PlayerSettings& settings,
         flushUntil (t, out);
         pos = t;
 
+        if (ev.velocityOnly)
+        {
+            for (int i = 0; i < numHeld; ++i)
+                if (held[(size_t) i].source == ev.source)
+                {
+                    held[(size_t) i].velocity = clampi (ev.velocity, 1, 127);
+                    if (i == numHeld - 1 && ! s.fixedVelocity)
+                        curVel = held[(size_t) i].velocity;
+                }
+            continue;
+        }
+
         const int key = clampi (ev.key, 0, kKeys - 1);
         if (ev.on)
         {

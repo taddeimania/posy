@@ -25,7 +25,10 @@ it to an instrument in Live in about five minutes and shows you round the panel.
   `F#m9`, `/G`, `sus4`) and set numbers (`42`). Every word must match, so
   `Dm7 G7 jazz` finds jazz sets containing both chords. Flats and sharps are
   the same thing (`Bb` finds `A#`), and `maj7` finds `M7`.
-- Up / Down step through the results while you type; Esc clears.
+- Up / Down step through the results while you type; Esc clears. The search
+  box hands the keyboard back to Live (so its computer MIDI keyboard plays
+  again) when you press Return or Esc, click anywhere else in Posy, or stop
+  typing for a few seconds.
 - Genre buttons narrow the list; **STARRED** shows the sets you've starred
   (click the star on a row), **MY SETS** your own banks. Stars are remembered
   for every Posy on the machine.
@@ -99,9 +102,19 @@ bassline. The table shows each set's white-key chords (C D E F G A):
 | 158 | Country Trad | C D7 C/E F G7 Am ... |
 
 **CHORDS** — the twelve chords of the set, laid out like an octave of a
-keyboard with the sharps above. Click to play, drag across to move between
-chords. Each pad shows the chord name (transposed with KEY) and the notes it
-will send. Higher on a pad plays louder, unless FIXED velocity is on.
+keyboard with the sharps above. Click to play; drag sideways to move between
+chords in the same row. Each pad shows the chord name (transposed with KEY)
+and the notes it will send. Higher on a pad plays louder, unless FIXED velocity
+is on.
+
+While you hold a pad, **drag up and down to change the velocity**: a number and
+a bar on the pad show it. MIDI can't change the velocity of notes already
+sounding, so the drag does two things. Notes the pad starts from then on (each
+arp step, for example) take the new velocity, unless FIXED is on. And the drag goes to your
+instrument as **DRAG** says (in VOICE): **PRESS** sends aftertouch, which Live's
+Wavetable, Drift and Meld can map to volume or filter for swells; **MOD** sends
+the mod wheel (CC1), **EXPR** expression (CC11), **OFF** nothing. Letting go of
+the pad puts the controller back.
 
 A MIDI keyboard on Posy's track plays the same chords: C plays the C pad, C#
 the C# pad, and so on in every octave. With **KBD OCT** on, the octave you play

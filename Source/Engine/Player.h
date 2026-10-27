@@ -74,6 +74,8 @@ struct KeyEvent
     int  key = 0;                  // 0..11: which chord of the set
     int  octave = 0;               // octaves above/below the home octave
     int  velocity = 100;
+    bool velocityOnly = false;     // not a press: the held key's velocity changed (a pad drag).
+                                   // Notes started from now on use it; FIXED velocity ignores it.
 };
 inline constexpr int kPadSource = 1000;
 

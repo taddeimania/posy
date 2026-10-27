@@ -155,10 +155,12 @@ constexpr int kBlackAfter[5] { 0, 1, 3, 4, 5 };
 
 ChordPads::ChordPads (PosyProcessor& p) : proc (p)
 {
-    setTooltip ("Click a chord to play it, drag across to move between chords. Higher on a pad plays "
-                "louder (unless FIXED velocity is on). A MIDI keyboard on this track plays them too: "
-                "each key of the octave picks a chord. In EDIT mode, click a pad to choose where the "
-                "next chord you play lands; double-click to rename it, right-click to clear it.");
+    setTooltip ("Click a chord to play it; drag sideways to move between chords in the row. Higher on a pad "
+                "plays louder, and while you hold a pad, dragging up and down raises and lowers the velocity: "
+                "new notes (each arp step) take it, and the drag is sent as pressure (or the CC chosen in "
+                "DRAG) so a sounding chord can swell. A MIDI keyboard on this track plays the chords too. "
+                "In EDIT mode, click a pad to choose where the next chord you play lands; double-click to "
+                "rename it, right-click to clear it.");
 }
 
 Rectangle<float> ChordPads::padBounds (int key) const
@@ -194,6 +196,8 @@ void ChordPads::press (int key, Point<float> p)
     }
     proc.pressPad (key, vel);
     mouseKey = key;
+    pressY = p.y;
+    pressVel = dragVel = vel;
     repaint();
 }
 
@@ -202,6 +206,7 @@ void ChordPads::releaseHeld()
     if (mouseKey >= 0)
         proc.releasePad (mouseKey);
     mouseKey = -1;
+    dragVel = -1;
     repaint();
 }
 
@@ -256,11 +261,27 @@ void ChordPads::padMenu (int key)
 
 void ChordPads::mouseDrag (const MouseEvent& e)
 {
-    const int k = keyAt (e.position);
-    if (k == mouseKey || k < 0)
+    if (mouseKey < 0)
         return;
-    releaseHeld();
-    press (k, e.position);
+
+    // Sideways onto another pad in the same row: play that chord instead.
+    auto sharp = [] (int key) { return key == 1 || key == 3 || key == 6 || key == 8 || key == 10; };
+    const int k = keyAt (e.position);
+    if (k >= 0 && k != mouseKey && sharp (k) == sharp (mouseKey))
+    {
+        releaseHeld();
+        press (k, e.position);
+        return;
+    }
+
+    // Up and down (anywhere else, even off the pad): velocity.
+    const int v = jlimit (1, 127, pressVel + roundToInt ((pressY - e.position.y) * 0.9f));
+    if (v != dragVel)
+    {
+        dragVel = v;
+        proc.padVelocity (mouseKey, v);
+        repaint();
+    }
 }
 
 void ChordPads::mouseUp (const MouseEvent&)
@@ -271,7 +292,7 @@ void ChordPads::mouseUp (const MouseEvent&)
 void ChordPads::refresh()
 {
     String sig;
-    sig << proc.setIndex() << ":" << proc.playingKey() << ":" << mouseKey << ":" << (int) proc.isCustom()
+    sig << proc.setIndex() << ":" << proc.playingKey() << ":" << mouseKey << ":" << dragVel << ":" << (int) proc.isCustom()
         << ":" << (int) proc.bankEdits() << ":" << (int) proc.editing() << ":" << proc.editPad();
     for (int k = 0; k < kKeys; ++k) sig << (proc.keyDown (k) ? "1" : "0");
     for (auto* id : { ids::key, ids::octave, ids::invert, ids::spread, ids::bass })
@@ -308,7 +329,18 @@ void ChordPads::paint (Graphics& g)
         auto inner = r.reduced (10.0f, 8.0f);
         auto top = inner.removeFromTop (16.0f);
         drawText (g, keyName (k), top, 13.0f, dim, true, Justification::centredLeft);
-        if (target)
+        if (k == mouseKey && dragVel >= 0)
+        {
+            // Held: the velocity, as a number and a bar up the right-hand edge.
+            drawText (g, String (dragVel), top, 12.0f, colours::brand.darker (lit ? 0.35f : 0.0f), true,
+                      Justification::centredRight);
+            const auto track = r.reduced (0.0f, 6.0f).removeFromRight (7.0f).translated (-4.0f, 0.0f);
+            g.setColour (dim.withAlpha (0.35f));
+            g.fillRect (track);
+            g.setColour (colours::brand);
+            g.fillRect (track.withTop (track.getBottom() - track.getHeight() * (float) dragVel / 127.0f));
+        }
+        else if (target)
             drawText (g, "PLAY A CHORD", top, 10.5f, colours::brand, true, Justification::centredRight);
         else
             drawLed (g, { top.getRight() - 6.0f, top.getCentreY() }, 5.0f, colours::brand, lit, lit ? 0.6f : 0.0f);
@@ -365,6 +397,7 @@ Browser::Browser (PosyProcessor& p, Settings& s) : proc (p), settings (s)
     chips[0]->setLit (true);
 
     list.setModel (this);
+    list.setWantsKeyboardFocus (false);    // clicking the list mustn't take Live's keyboard
     list.setRowHeight (50);
     list.setColour (ListBox::backgroundColourId, colours::black);
     list.setColour (ListBox::outlineColourId, colours::inkDim);
@@ -516,8 +549,24 @@ void Browser::refilter()
     repaint();
 }
 
+void Browser::releaseSearchFocus()
+{
+    if (search.hasKeyboardFocus (true))
+        search.giveAwayKeyboardFocus();
+    Component::unfocusAllComponents();
+}
+
 void Browser::refresh()
 {
+    // A search box left focused would keep swallowing keys meant for Live's
+    // computer MIDI keyboard: give them back after a few seconds of no typing.
+    const bool focused = search.hasKeyboardFocus (true);
+    if (focused && ! searchWasFocused)
+        lastTypedMs = Time::getMillisecondCounter();     // the clock starts when you click in
+    searchWasFocused = focused;
+    if (focused && ! search.isMouseOverOrDragging() && Time::getMillisecondCounter() - lastTypedMs > 6000)
+        releaseSearchFocus();
+
     if (proc.bankFilesEdits() != filesSeen)
     {
         rebuild();
@@ -700,6 +749,7 @@ bool Browser::keyPressed (const KeyPress& k, Component*)
 
 void Browser::textEditorReturnKeyPressed (TextEditor&)
 {
+    releaseSearchFocus();          // done typing: keys go back to Live
     for (int i : shown)
         if (isCurrent (entries[(size_t) i]))
             return;
@@ -711,6 +761,7 @@ void Browser::textEditorEscapeKeyPressed (TextEditor&)
 {
     search.clear();
     refilter();
+    releaseSearchFocus();
 }
 
 // ===========================================================================

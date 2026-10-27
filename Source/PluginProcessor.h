@@ -53,6 +53,7 @@ public:
     // --- panel (message thread) ---------------------------------------------
     void pressPad (int key, int velocity);
     void releasePad (int key);
+    void padVelocity (int key, int velocity);   // dragging on a held pad
     void panic() { panicRequested.store (true); }
 
     void setParam (const juce::String& id, float plainValue);
@@ -149,6 +150,7 @@ private:
     uint32_t lastSerial = 0;
 
     std::atomic<bool> panicRequested { false };
+    int dragSentMode = -1;               // audio thread: which drag message is out and needs resetting
     std::atomic<int> uiKey { -1 };
     std::atomic<bool> uiPlaying { false };
     std::atomic<uint32_t> uiKeysDown { 0 };

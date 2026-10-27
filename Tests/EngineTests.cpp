@@ -316,6 +316,39 @@ void testArpModes()
     }
 }
 
+void testPadDrag()
+{
+    // Dragging a held pad changes the velocity of the notes it starts next.
+    Player p;
+    PlayerSettings s;
+    s.arp = true;                              // 1/16 at 120 bpm: a note every 6000 samples
+    auto out = run (p, s, { pad (0, true, 0, 60) }, 6000);
+    CHECK (count (out, true) == 1 && out[0].velocity == 60);
+    KeyEvent drag = pad (0, true, 0, 110);
+    drag.velocityOnly = true;
+    out = run (p, s, { drag }, 12000);
+    int on = 0;
+    for (auto& e : out)
+        if (e.on) { CHECK (e.velocity == 110); ++on; }
+    CHECK (on == 2);
+    CHECK (p.currentKey() == 0);               // a drag isn't a new press
+
+    // FIXED velocity ignores the drag.
+    s.fixedVelocity = true;
+    s.velocity = 90;
+    Player q;
+    run (q, s, { pad (0, true, 0, 60) }, 6000);
+    out = run (q, s, { drag }, 6000);
+    for (auto& e : out)
+        if (e.on) CHECK (e.velocity == 90);
+
+    // A drag on a pad that isn't held does nothing.
+    Player r;
+    PlayerSettings plain;
+    out = run (r, plain, { drag });
+    CHECK (out.empty() && r.currentKey() == -1);
+}
+
 void testFuzz()
 {
     std::mt19937 rng (1234);
@@ -369,6 +402,7 @@ int main()
     testArpFree();
     testArpSynced();
     testArpModes();
+    testPadDrag();
     testFuzz();
     if (failures == 0)
         std::printf ("all engine tests passed\n");

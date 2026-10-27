@@ -15,7 +15,8 @@ namespace posy::ui
 {
 // ---------------------------------------------------------------------------
 // Chord pads: the twelve chords of the set laid out like an octave of a
-// keyboard, sharps above. Press to play; drag across to move between chords.
+// keyboard, sharps above. Press to play; drag sideways to move between
+// chords in the row, drag up and down on a held pad for more or less velocity.
 // In EDIT mode a click also selects the pad that the next chord you play
 // lands on; double-click renames it, right-click offers rename and clear.
 // ---------------------------------------------------------------------------
@@ -42,6 +43,8 @@ private:
 
     PosyProcessor& proc;
     int mouseKey = -1;
+    float pressY = 0.0f;                   // where the held pad was pressed
+    int pressVel = 100, dragVel = -1;      // its velocity then, and now (-1: no pad held)
     juce::String lastSignature;
 };
 
@@ -63,6 +66,9 @@ public:
 
     void refresh();                        // follow the loaded set, pick up saved banks
     void focusSearch() { search.grabKeyboardFocus(); }
+    // Hand the keyboard back to Live, so its computer MIDI keyboard plays again.
+    void releaseSearchFocus();
+    bool isSearchBox (const juce::Component* c) const { return c == &search || search.isParentOf (c); }
     void step (int delta);                 // load the next/previous set in the list as filtered
 
 private:
@@ -83,7 +89,7 @@ private:
     juce::String getTooltipForRow (int row) override;
 
     // TextEditor::Listener
-    void textEditorTextChanged (juce::TextEditor&) override { refilter(); }
+    void textEditorTextChanged (juce::TextEditor&) override { lastTypedMs = juce::Time::getMillisecondCounter(); refilter(); }
     void textEditorReturnKeyPressed (juce::TextEditor&) override;
     void textEditorEscapeKeyPressed (juce::TextEditor&) override;
 
@@ -112,6 +118,8 @@ private:
     uint32_t filesSeen = 0xffffffffu;
     int numBanks = 0;
     juce::String countText;
+    juce::uint32 lastTypedMs = 0;
+    bool searchWasFocused = false;
 };
 
 // ---------------------------------------------------------------------------
