@@ -1,28 +1,24 @@
 Posy is a chord generator for Ableton Live: twelve chords per set, one per key,
 sent out as MIDI. Straight, strummed, held or arpeggiated.
 
-## What's new in 0.3.0
+## What's new in 0.3.1
 
-**Your own chord banks.** Play your own voicings onto the pads and save them.
-- Press **EDIT** (above the E and F pads), click a pad, play a chord on your
-  MIDI keyboard and let go. The chord lands on the pad with a name (`CM9`,
-  `A/Db`) and the next pad is selected, so you can play twelve in a row. You
-  hear the notes through your instrument as you play them.
-- Posy keeps the most notes you held at once, so a rolled chord or a
-  corrected wrong note comes out right.
-- Fix a voicing by clicking keys on the OUT keyboard. Double-click a pad to
-  rename it; right-click to rename, re-name from its notes, or clear it.
-- **EDIT** on a factory set starts a bank from a copy of it; **NEW** starts
-  an empty one.
-- **SAVE** / **SAVE AS** put banks under the new **MY SETS** button. Right-click
-  a bank in the list to rename, show or delete it.
-- The bank you're using is saved in the Live set too, so a project keeps
-  playing even if the bank's file is renamed or deleted. Loading something
-  else with unsaved edits asks first.
+**Drag on a pad for velocity.** Hold a pad and drag up for louder, down for
+softer; a number and a bar on the pad show it. Sliding sideways to another pad
+in the same row still changes chord.
+- Notes the pad starts from then on take the new velocity, so with ARP on each
+  step follows your drag (unless FIXED velocity is on).
+- The drag also goes to your instrument so a sounding chord can swell. Choose
+  what with the new **DRAG** setting in VOICE: **PRESS** (aftertouch; map
+  Pressure to volume or filter in Wavetable, Drift or Meld), **MOD** (mod
+  wheel, CC1), **EXPR** (expression, CC11) or **OFF**. Letting go of the pad
+  puts it back.
 
-Banks are files in `~/Library/Application Support/Posy/Banks` (Windows
-`%APPDATA%\Posy\Banks`, Linux `~/.config/Posy/Banks`). The getting started
-guide has a new page on making one.
+**Fixed: the search box held on to the keyboard.** Once you'd clicked in the
+search box, Live's computer MIDI keyboard stopped playing until you closed
+Posy. The box now hands the keyboard back when you press Return or Esc, click
+anywhere else in Posy, or stop typing for a few seconds, and clicking the sets
+list no longer takes it.
 
 ## Install
 
