@@ -155,10 +155,10 @@ constexpr int kBlackAfter[5] { 0, 1, 3, 4, 5 };
 
 ChordPads::ChordPads (PosyProcessor& p) : proc (p)
 {
-    setTooltip ("Click a chord to play it; drag sideways to move between chords in the row. Higher on a pad "
-                "plays louder, and while you hold a pad, dragging up and down raises and lowers the velocity: "
-                "new notes (each arp step) take it, and the drag is sent as pressure (or the CC chosen in "
-                "DRAG) so a sounding chord can swell. A MIDI keyboard on this track plays the chords too. "
+    setTooltip ("Click a chord to play it; drag onto another pad to move to that chord. Higher on a pad "
+                "plays louder, and while you hold a pad, moving up and down on it raises and lowers the velocity: "
+                "new notes (each arp step) take it, and it's sent as pressure (or the CC chosen in DRAG) so a "
+                "sounding chord can swell. A MIDI keyboard on this track plays the chords too. "
                 "In EDIT mode, click a pad to choose where the next chord you play lands; double-click to "
                 "rename it, right-click to clear it.");
 }
@@ -185,19 +185,20 @@ int ChordPads::keyAt (Point<float> p) const
     return -1;
 }
 
+int ChordPads::heightVelocity (int key, Point<float> p) const
+{
+    const auto r = padBounds (key).reduced (3.0f);
+    const float up = jlimit (0.0f, 1.0f, 1.0f - (p.y - r.getY()) / jmax (1.0f, r.getHeight()));
+    return jlimit (1, 127, roundToInt (20.0f + up * 107.0f));
+}
+
 void ChordPads::press (int key, Point<float> p)
 {
-    int vel = roundToInt (proc.getParam (ids::velocity));
-    if (proc.getParam (ids::fixedVel) < 0.5f)
-    {
-        const auto r = padBounds (key).reduced (3.0f);
-        const float up = jlimit (0.0f, 1.0f, 1.0f - (p.y - r.getY()) / jmax (1.0f, r.getHeight()));
-        vel = jlimit (1, 127, roundToInt (40.0f + up * 87.0f));
-    }
+    const bool fixed = proc.getParam (ids::fixedVel) > 0.5f;
+    const int vel = fixed ? roundToInt (proc.getParam (ids::velocity)) : heightVelocity (key, p);
     proc.pressPad (key, vel);
     mouseKey = key;
-    pressY = p.y;
-    pressVel = dragVel = vel;
+    dragVel = vel;
     repaint();
 }
 
@@ -264,18 +265,18 @@ void ChordPads::mouseDrag (const MouseEvent& e)
     if (mouseKey < 0)
         return;
 
-    // Sideways onto another pad in the same row: play that chord instead.
-    auto sharp = [] (int key) { return key == 1 || key == 3 || key == 6 || key == 8 || key == 10; };
+    // Onto another pad, in either row: play that chord instead.
     const int k = keyAt (e.position);
-    if (k >= 0 && k != mouseKey && sharp (k) == sharp (mouseKey))
+    if (k >= 0 && k != mouseKey)
     {
         releaseHeld();
         press (k, e.position);
         return;
     }
 
-    // Up and down (anywhere else, even off the pad): velocity.
-    const int v = jlimit (1, 127, pressVel + roundToInt ((pressY - e.position.y) * 0.9f));
+    // Still on the held pad (or off the edge of everything): its height is the
+    // velocity, the same as where you'd click.
+    const int v = heightVelocity (mouseKey, e.position);
     if (v != dragVel)
     {
         dragVel = v;

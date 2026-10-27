@@ -15,8 +15,9 @@ namespace posy::ui
 {
 // ---------------------------------------------------------------------------
 // Chord pads: the twelve chords of the set laid out like an octave of a
-// keyboard, sharps above. Press to play; drag sideways to move between
-// chords in the row, drag up and down on a held pad for more or less velocity.
+// keyboard, sharps above. Press to play; how high on the pad sets the velocity,
+// and moving up and down inside a held pad changes it. Dragging onto another
+// pad (either row) moves to that chord.
 // In EDIT mode a click also selects the pad that the next chord you play
 // lands on; double-click renames it, right-click offers rename and clear.
 // ---------------------------------------------------------------------------
@@ -38,13 +39,13 @@ private:
     int keyAt (juce::Point<float>) const;
     void press (int key, juce::Point<float>);
     void releaseHeld();
+    int heightVelocity (int key, juce::Point<float>) const;   // higher on the pad = louder
     void padMenu (int key);
     void rename (int key);
 
     PosyProcessor& proc;
     int mouseKey = -1;
-    float pressY = 0.0f;                   // where the held pad was pressed
-    int pressVel = 100, dragVel = -1;      // its velocity then, and now (-1: no pad held)
+    int dragVel = -1;                      // the held pad's velocity now (-1: no pad held)
     juce::String lastSignature;
 };
 

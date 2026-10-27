@@ -102,13 +102,14 @@ bassline. The table shows each set's white-key chords (C D E F G A):
 | 158 | Country Trad | C D7 C/E F G7 Am ... |
 
 **CHORDS** — the twelve chords of the set, laid out like an octave of a
-keyboard with the sharps above. Click to play; drag sideways to move between
-chords in the same row. Each pad shows the chord name (transposed with KEY)
+keyboard with the sharps above. Click to play; drag onto another pad, in either
+row, to move to that chord. Each pad shows the chord name (transposed with KEY)
 and the notes it will send. Higher on a pad plays louder, unless FIXED velocity
 is on.
 
-While you hold a pad, **drag up and down to change the velocity**: a number and
-a bar on the pad show it. MIDI can't change the velocity of notes already
+While you hold a pad, **move up and down on it to change the velocity**: the
+top of the pad is loudest, the bottom softest, and a number and a bar show it.
+Carry on past the pad's edge onto another pad and you move to that chord. MIDI can't change the velocity of notes already
 sounding, so the drag does two things. Notes the pad starts from then on (each
 arp step, for example) take the new velocity, unless FIXED is on. And the drag goes to your
 instrument as **DRAG** says (in VOICE): **PRESS** sends aftertouch, which Live's

@@ -1,24 +1,19 @@
 Posy is a chord generator for Ableton Live: twelve chords per set, one per key,
 sent out as MIDI. Straight, strummed, held or arpeggiated.
 
-## What's new in 0.3.1
+## What's new in 0.3.2
 
-**Drag on a pad for velocity.** Hold a pad and drag up for louder, down for
-softer; a number and a bar on the pad show it. Sliding sideways to another pad
-in the same row still changes chord.
-- Notes the pad starts from then on take the new velocity, so with ARP on each
-  step follows your drag (unless FIXED velocity is on).
-- The drag also goes to your instrument so a sounding chord can swell. Choose
-  what with the new **DRAG** setting in VOICE: **PRESS** (aftertouch; map
-  Pressure to volume or filter in Wavetable, Drift or Meld), **MOD** (mod
-  wheel, CC1), **EXPR** (expression, CC11) or **OFF**. Letting go of the pad
-  puts it back.
+**Fixed: dragging from a bottom-row pad up into the sharps.** In 0.3.1 a
+vertical drag only changed velocity, so you couldn't glide from a white-key
+pad up to a black-key pad any more. Now:
+- While you stay on the held pad, its height sets the velocity: the top of
+  the pad is loudest, the bottom softest, the same as where you click. The
+  number and bar on the pad follow you, and the change goes out through
+  **DRAG** (pressure, mod wheel or expression) as before.
+- Drag past the pad's edge onto any other pad, in either row, and you move to
+  that chord.
 
-**Fixed: the search box held on to the keyboard.** Once you'd clicked in the
-search box, Live's computer MIDI keyboard stopped playing until you closed
-Posy. The box now hands the keyboard back when you press Return or Esc, click
-anywhere else in Posy, or stop typing for a few seconds, and clicking the sets
-list no longer takes it.
+The softest point at the bottom of a pad is now velocity 20 (it was 40).
 
 ## Install
 
