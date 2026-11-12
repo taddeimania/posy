@@ -1,6 +1,10 @@
 Posy is a chord generator for Ableton Live: twelve chords per set, one per key,
 sent out as MIDI. Straight, strummed, held or arpeggiated.
 
+## What's new in 0.3.3
+
+- The macOS build is signed and notarised by Apple, so your DAW loads it straight away, with no quarantine command first.
+
 ## What's new in 0.3.2
 
 **Fixed: dragging from a bottom-row pad up into the sharps.** In 0.3.1 a
