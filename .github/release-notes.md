@@ -22,5 +22,5 @@ Unzip and copy `Posy.vst3` into your VST3 folder (macOS
 Linux `~/.vst3`), then rescan plug-ins in Live. The guide and the README cover
 routing Posy into an instrument.
 
-**macOS:** the plugin isn't notarised. If macOS refuses to load it, run
-`xattr -dr com.apple.quarantine ~/Library/Audio/Plug-Ins/VST3/Posy.vst3`.
+**macOS:** the plugin is signed and notarised by Apple, so your DAW loads it
+straight away.
